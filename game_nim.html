@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>NIM Master Deluxe — Strategi & Logika</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --bg: #80848d;
+      --card-bg: #FEFBEA;
+      --accent: #221a1a;
+      --accent-hover: #e0d5cc;
+      --stick-color: #520404;
+      --stick-glow: rgba(251, 191, 36, 0.4);
+      --danger: #9b7d7d;
+      --success: #22c55e;
+      --text: #030b13;
+      --text-muted: #07080a;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    body {
+      margin: 100;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      width: 50%;
+      max-width: 1200px;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 40px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      border: 1px solid rgba(56, 41, 41, 0.1);
+    }
+
+    .logo-bar {
+  display: flex;
+  align-items: center;        /* sejajar vertikal */
+  justify-content: space-between; /* kiri - tengah - kanan */
+}
+
+.logo-bar img:nth-child(2) {
+  margin: 0 auto; /* pastikan logo tengah benar-benar di tengah */
+}
+
+
+    header { text-align: center; margin-bottom: 30px; }
+    h1 { margin: 0; font-size: 50px; letter-spacing: -1px; background: linear-gradient(to right, #334155, #334155); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
+
+    /* Pengaturan Game */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 25px;
+      background: rgba(0,0,0,0.2);
+      padding: 15px;
+      border-radius: 16px;
+    }
+
+    .setting-item { display: flex; flex-direction: column; gap: 5px; }
+    .setting-item label { font-size: 12px; color: var(--accent); font-weight: bold; text-transform: uppercase; }
+    select, input[type="number"] {
+      background: #334155;
+      border: 1px solid #475569;
+      color: white;
+      padding: 8px;
+      border-radius: 8px;
+      outline: none;
+    }
+
+    /* Papan Permainan */
+    .game-area {
+      background:#CAC9BD;
+      border-radius: 20px;
+      padding: 40px 20px;
+      text-align: center;
+      position: relative;
+      margin-bottom: 25px;
+      min-height: 100px;
+    }
+
+    .sticks-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .stick {
+      width: 20px;
+      height: 100px;
+      background: linear-gradient(to bottom, #be3232, var(--stick-color));
+      border-radius: 20px;
+      box-shadow: 0 0 15px var(--stick-glow);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+    }
+
+    .stick:hover { transform: translateY(-10px); filter: brightness(1.2); }
+    .stick.removing { transform: translateY(50px) scale(0); opacity: 0; }
+
+    /* Kontrol */
+    .controls { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+    .action-buttons { display: flex; gap: 15px; }
+    
+    .btn-take {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: none;
+      background: white;
+      color: var(--bg);
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+    }
+
+    .btn-take:hover:not(:disabled) { transform: scale(1.1); background: white; }
+    .btn-take:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+    .status-badge {
+      padding: 8px 20px;
+      border-radius: 30px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .score-board {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .score-item { text-align: center; flex: 1; }
+    .score-val { font-size: 24px; font-weight: 800; display: block; }
+    .score-label { font-size: 12px; color: var(--text-muted); }
+
+    /* Modal / Overlay */
+    #overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(15, 23, 42, 0.9);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+    }
+
+    .win-card {
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 30px;
+      text-align: center;
+      border: 1px solid var(--accent);
+      box-shadow: 0 0 50px rgba(56, 189, 248, 0.2);
+    }
+
+    .btn-restart {
+      margin-top: 20px;
+      padding: 12px 30px;
+      border-radius: 12px;
+      border: none;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    canvas#confetti {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 101;
+    }
+
+    @media (max-width: 480px) {
+      .settings-grid { grid-template-columns: 1fr; }
+      .stick { width: 8px; height: 70px; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+      <div class="logo-bar">
+    <img src="upgrisba.png" alt="Logo Kiri" width="100" height="100">
+    <img src="logo.png" alt="Logo Tengah" width="220" height="150">
+    <img src="upgrisba.png" alt="Logo Kanan" width="100" height="100">
+  </div>
+    <header>  
+      <h1>GAME NIM</h1>
+      <div class="subtitle"><h3>Algoritma Reinforcement Learning</h3></div>
+    </header>
+
+    <div class="settings-grid">
+      <div class="setting-item">
+        <label>Mode Permainan</label>
+        <select id="gameMode">
+          <option value="pvc">Melawan Komputer</option>
+          <option value="pvp">Dua Pemain (Lokal)</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>Kesulitan AI</label>
+        <select id="difficulty">
+          <option value="easy">Mudah (Random)</option>
+          <option value="expert">Ahli (Matematika)</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>Aturan Akhir</label>
+        <select id="winCondition">
+          <option value="normal">Ambil Terakhir = Menang</option>
+          <option value="misere">Ambil Terakhir = Kalah</option>
+        </select>
+      </div>
+      <div class="setting-item">
+        <label>Jumlah Batang</label>
+        <input type="number" id="initialSticks" value="11" min="5" max="21">
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div class="status-badge" id="turnDisplay">Giliran Anda</div>
+      <div style="margin: 20px 0; font-size: 20px; color: black;">
+        Sisa Batang: <span id="stickCount" style="color: white; font-weight: bold;">11</span>
+      </div>
+      <div class="sticks-container" id="sticksBox">
+        <!-- Batang di-generate via JS -->
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="action-buttons">
+        <button class="btn-take" onclick="handleTake(1)">1</button>
+        <button class="btn-take" onclick="handleTake(2)">2</button>
+        <button class="btn-take" onclick="handleTake(3)">3</button>
+      </div>
+      
+      <div class="score-board">
+        <div class="score-item">
+          <span style="font-size: 20px;" class="score-label" id="p1Name">Pemain 1</span>
+          <span class="score-val" id="p1Score">0</span>
+        </div>
+        <div class="score-item">
+          <span style="font-size: 20px;" class="score-label" id="p2Name">Komputer</span>
+          <span class="score-val" id="p2Score">0</span>
+        </div>
+      </div>
+      
+      <button onclick="resetGame()" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:12px; text-decoration:underline;">Mulai Ulang Ronde</button>
+    </div>
+  </div>
+
+  <div id="overlay">
+    <div class="win-card">
+      <h2 id="winMessage" style="font-size: 32px; margin-bottom: 10px;">🏆 ANDA MENANG!</h2>
+      <p id="winSubMessage" style="color: var(--text-muted);">Strategi yang luar biasa.</p>
+      <button class="btn-restart" onclick="closeOverlay()">Main Lagi</button>
+    </div>
+  </div>
+
+  <canvas id="confetti"></canvas>
+
+  <script>
+    // --- State Permainan ---
+    let state = {
+      sticks: 11,
+      currentTurn: 'p1', // p1 atau p2
+      scores: { p1: 0, p2: 0 },
+      isGameOver: false,
+      isAiProcessing: false
+    };
+
+    // --- Audio System (Tanpa File Eksternal) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playTone(freq, type, duration) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function soundTake() { playTone(440, 'sine', 0.1); }
+    function soundAi() { playTone(330, 'triangle', 0.2); }
+    function soundWin() { 
+      playTone(523.25, 'square', 0.1);
+      setTimeout(() => playTone(659.25, 'square', 0.1), 100);
+      setTimeout(() => playTone(783.99, 'square', 0.3), 200);
+    }
+
+    // --- UI Logic ---
+    function updateUI() {
+      const sticksBox = document.getElementById('sticksBox');
+      const stickCountDisp = document.getElementById('stickCount');
+      const turnDisp = document.getElementById('turnDisplay');
+      const p1NameDisp = document.getElementById('p1Name');
+      const p2NameDisp = document.getElementById('p2Name');
+      const mode = document.getElementById('gameMode').value;
+
+      // Update names
+      p2NameDisp.innerText = mode === 'pvc' ? 'Komputer' : 'Pemain 2';
+      
+      // Update turn display
+      if (mode === 'pvc') {
+        turnDisp.innerText = state.currentTurn === 'p1' ? 'Giliran Anda' : 'Giliran Komputer...';
+      } else {
+        turnDisp.innerText = state.currentTurn === 'p1' ? 'Giliran Pemain 1' : 'Giliran Pemain 2';
+      }
+
+      // Update Stick Count
+      stickCountDisp.innerText = state.sticks;
+
+      // Render Sticks
+      sticksBox.innerHTML = '';
+      for (let i = 0; i < state.sticks; i++) {
+        const stick = document.createElement('div');
+        stick.className = 'stick';
+        stick.style.height = (80 + Math.random() * 40) + 'px'; // Variasi tinggi
+        sticksBox.appendChild(stick);
+      }
+
+      // Update Buttons
+      const buttons = document.querySelectorAll('.btn-take');
+      buttons.forEach((btn, idx) => {
+        const val = idx + 1;
+        btn.disabled = state.isGameOver || state.isAiProcessing || val > state.sticks || (mode === 'pvc' && state.currentTurn === 'p2');
+      });
+
+      document.getElementById('p1Score').innerText = state.scores.p1;
+      document.getElementById('p2Score').innerText = state.scores.p2;
+    }
+
+    // --- Core Logic ---
+    function handleTake(num) {
+      if (state.isGameOver || state.isAiProcessing) return;
+      
+      processMove(num);
+    }
+
+    function processMove(num) {
+      soundTake();
+      
+      // Animasi penghapusan batang (visual saja)
+      const sticks = document.querySelectorAll('.stick');
+      for(let i=0; i<num; i++) {
+        if(sticks[sticks.length - 1 - i]) {
+          sticks[sticks.length - 1 - i].classList.add('removing');
+        }
+      }
+
+      setTimeout(() => {
+        state.sticks -= num;
+        
+        if (state.sticks <= 0) {
+          endGame(state.currentTurn);
+        } else {
+          state.currentTurn = state.currentTurn === 'p1' ? 'p2' : 'p1';
+          updateUI();
+          
+          if (document.getElementById('gameMode').value === 'pvc' && state.currentTurn === 'p2') {
+            runAI();
+          }
+        }
+      }, 300);
+    }
+
+    function runAI() {
+      state.isAiProcessing = true;
+      updateUI();
+      
+      const difficulty = document.getElementById('difficulty').value;
+      const winCond = document.getElementById('winCondition').value;
+      let take = 1;
+
+      setTimeout(() => {
+        if (difficulty === 'easy') {
+          take = Math.floor(Math.random() * Math.min(3, state.sticks)) + 1;
+        } else {
+          // Logika NIM Expert
+          // Target untuk Normal: Sisa kelipatan (1+max_take) = 4
+          // Target untuk Misere: Sisa kelipatan 4 + 1
+          const targetMod = winCond === 'normal' ? 0 : 1;
+          take = (state.sticks - targetMod) % 4;
+          
+          if (take === 0) take = 1; // Jika posisi terjepit, ambil 1 saja
+          if (take > 3) take = 3;
+        }
+
+        soundAi();
+        processMove(take);
+        state.isAiProcessing = false;
+      }, 1000);
+    }
+
+    function endGame(lastPlayer) {
+      state.isGameOver = true;
+      const winCond = document.getElementById('winCondition').value;
+      const mode = document.getElementById('gameMode').value;
+      
+      let winner;
+      if (winCond === 'normal') {
+        winner = lastPlayer; // Yang ambil terakhir menang
+      } else {
+        winner = lastPlayer === 'p1' ? 'p2' : 'p1'; // Yang ambil terakhir kalah
+      }
+
+      state.scores[winner]++;
+      
+      // Tampilkan Modal
+      const overlay = document.getElementById('overlay');
+      const msg = document.getElementById('winMessage');
+      const sub = document.getElementById('winSubMessage');
+      
+      if (mode === 'pvc') {
+        msg.innerText = winner === 'p1' ? '🏆 ANDA MENANG!' : '🤖 AI MENANG!';
+        sub.innerText = winner === 'p1' ? 'Anda mengalahkan mesin!' : 'Coba lagi, AI terlalu kuat.';
+      } else {
+        msg.innerText = winner === 'p1' ? '🏆 PEMAIN 1 MENANG!' : '🏆 PEMAIN 2 MENANG!';
+        sub.innerText = 'Permainan yang bagus untuk keduanya.';
+      }
+
+      overlay.style.display = 'flex';
+      soundWin();
+      startConfetti();
+      updateUI();
+    }
+
+    function resetGame() {
+      state.sticks = parseInt(document.getElementById('initialSticks').value) || 11;
+      state.currentTurn = 'p1';
+      state.isGameOver = false;
+      state.isAiProcessing = false;
+      updateUI();
+    }
+
+    function closeOverlay() {
+      document.getElementById('overlay').style.display = 'none';
+      stopConfetti();
+      resetGame();
+    }
+
+    // --- Confetti System ---
+    let confettiActive = false;
+    function startConfetti() {
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      let particles = [];
+      confettiActive = true;
+
+     
+      function draw() {
+        if(!confettiActive) return;
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        particles.forEach(p => {
+          p.y += p.v;
+          if(p.y > canvas.height) p.y = -20;
+          ctx.fillStyle = p.color;
+          ctx.fillRect(p.x, p.y, p.size, p.size);
+        });
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+    function stopConfetti() { confettiActive = false; }
+
+    // Init
+    window.onload = () => {
+      resetGame();
+      // Resume audio on first interaction
+      document.body.addEventListener('click', () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      }, { once: true });
+    };
+
+    // Auto-reset when settings change
+    document.querySelectorAll('select, input').forEach(el => {
+      el.addEventListener('change', resetGame);
+    });
+  </script>
+</body>
+</html>
